@@ -5,28 +5,26 @@ import {
 } from "@tanstack/react-query";
 import { fetchNotes } from "@/lib/api";
 import type { NoteTag } from "@/types/note";
-import NotesClient from "../../Notes.client"; // можна перевикористати існуючий
+import NotesClient from "../../Notes.client";
 import type { NotesListResponse } from "@/lib/types";
 
 type PageProps = {
-  params: Promise<{ tag?: string[] }>; // async params
-  searchParams: Promise<{ page?: string; search?: string }>; // async searchParams
+  params: { tag?: string[] };
+  searchParams: { page?: string; search?: string };
 };
 
 export default async function FilteredNotesPage({
   params,
   searchParams,
 }: PageProps) {
-  const p = await params;
-  const sp = await searchParams;
+  const raw = params.tag?.[0];
+  const decoded = raw ? decodeURIComponent(raw) : undefined;
+  const isAll = !decoded || decoded.toLowerCase() === "all";
+  const tag = isAll ? undefined : (decoded as NoteTag);
 
-  const tagFromUrl = p.tag?.[0]; // 'all' | 'Work' | undefined
-  const isAll = !tagFromUrl || tagFromUrl === "all";
-  const tag = isAll ? undefined : (tagFromUrl as NoteTag);
-
-  const pageNum = Number(sp.page);
+  const pageNum = Number(searchParams.page);
   const page = Number.isFinite(pageNum) && pageNum > 0 ? pageNum : 1;
-  const search = (sp.search ?? "").toString();
+  const search = (searchParams.search ?? "").toString();
   const perPage = 12;
 
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
@@ -34,15 +32,12 @@ export default async function FilteredNotesPage({
   try {
     await qc.prefetchQuery<NotesListResponse>({
       queryKey: ["notes", { page, search, perPage, tag: tag ?? "all" }],
-      queryFn: () => fetchNotes({ page, perPage, search, tag }), // ← передаємо tag тільки, якщо він є
+      queryFn: () => fetchNotes({ page, perPage, search, tag }),
     });
-  } catch {
-    // тихо ігноруємо; клієнтський компонент покаже помилку
-  }
+  } catch {}
 
   return (
     <HydrationBoundary state={dehydrate(qc)}>
-      {/* перевикористовуємо NotesClient, але передаємо currentTag */}
       <NotesClient
         initialPage={page}
         initialSearch={search}

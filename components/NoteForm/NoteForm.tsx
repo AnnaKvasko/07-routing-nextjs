@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import {
   Formik,
@@ -7,25 +7,25 @@ import {
   ErrorMessage,
   type FormikHelpers,
   type FormikProps,
-} from 'formik';
-import * as Yup from 'yup';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { createNote, type CreateNoteParams } from '@/lib/api';
-import type { Note, NoteTag } from '@/types/note';
-import { TAGS } from '@/types/note';
-import css from './NoteForm.module.css';
+} from "formik";
+import * as Yup from "yup";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { createNote, type CreateNoteParams } from "@/lib/api";
+import type { Note, NoteTag } from "@/types/note";
+import { TAGS } from "@/types/note";
+import css from "./NoteForm.module.css";
 
 type FormValues = CreateNoteParams;
 
 const schema = Yup.object({
   title: Yup.string()
-    .min(3, 'Min 3')
-    .max(50, 'Max 50')
-    .required('Title is required'),
-  content: Yup.string().max(500, 'Max 500').defined(),
+    .min(3, "Min 3")
+    .max(50, "Max 50")
+    .required("Title is required"),
+  content: Yup.string().max(500, "Max 500").defined(),
   tag: Yup.string()
-    .oneOf([...TAGS], 'Invalid tag')
-    .required('Tag is required'),
+    .oneOf([...TAGS], "Invalid tag")
+    .required("Tag is required"),
 });
 
 export default function NoteForm({ onCancel }: { onCancel: () => void }) {
@@ -37,18 +37,23 @@ export default function NoteForm({ onCancel }: { onCancel: () => void }) {
     CreateNoteParams
   >({
     mutationFn: (body) => createNote(body),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['notes'] }),
+    onSuccess: (_data, variables) => {
+      qc.invalidateQueries({ queryKey: ["notes"] });
+      if (variables.tag) {
+        qc.invalidateQueries({ queryKey: ["notes", { tag: variables.tag }] });
+      }
+    },
   });
 
   const initialValues: FormValues = {
-    title: '',
-    content: '',
-    tag: 'Todo' as NoteTag,
+    title: "",
+    content: "",
+    tag: TAGS[0],
   };
 
   const handleSubmit = (
     values: FormValues,
-    helpers: FormikHelpers<FormValues>,
+    helpers: FormikHelpers<FormValues>
   ) => {
     mutate(values, {
       onSuccess: () => {
@@ -112,7 +117,7 @@ export default function NoteForm({ onCancel }: { onCancel: () => void }) {
 
             {error && (
               <p className={css.error}>
-                {error.message ?? 'Failed to create note'}
+                {error.message ?? "Failed to create note"}
               </p>
             )}
 

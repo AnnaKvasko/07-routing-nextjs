@@ -1,3 +1,5 @@
+"use client";
+
 import Link from "next/link";
 import { TAGS } from "@/types/note";
 import css from "./SidebarNotes.module.css";
@@ -24,3 +26,4 @@ export default function SidebarNotes() {
     </ul>
   );
 }
+

@@ -25,7 +25,7 @@ export interface FetchNotesParams {
   page: number;
   perPage: number;
   search?: string;
-  tag?: NoteTag; // ✅ додали для фільтрації
+  tag?: NoteTag; 
 }
 
 export interface CreateNoteParams {
@@ -38,14 +38,14 @@ export interface DeleteNoteParams {
   id: string;
 }
 
-// ✅ fetchNotes тепер підтримує фільтр за тегом
+
 export async function fetchNotes(
   { page, perPage, search, tag }: FetchNotesParams,
   signal?: AbortSignal
 ): Promise<NotesListResponse> {
   const params: Record<string, string | number> = { page, perPage };
   if (search?.trim()) params.search = search.trim();
-  if (tag) params.tag = tag; // передаємо tag лише якщо він є
+  if (tag) params.tag = tag; 
 
   const res: AxiosResponse<NotesListResponse> = await api.get("/notes", {
     params,

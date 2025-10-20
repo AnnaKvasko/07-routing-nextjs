@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useDebounce } from "use-debounce";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -19,7 +19,6 @@ type Props = {
   initialPage: number;
   initialSearch: string;
   perPage: number;
-  /** Якщо рендеримо у /notes/filter/[tag], сюди приходить tag або 'all'. Для /notes – не передаємо. */
   currentTag?: NoteTag | "all";
 };
 
@@ -31,13 +30,14 @@ export default function NotesClient({
 }: Props) {
   const router = useRouter();
   const params = useSearchParams();
+  const paramsStr = params.toString(); 
 
   const [page, setPage] = useState(initialPage);
   const [search, setSearch] = useState(initialSearch);
   const [debouncedSearch] = useDebounce(search, 400);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  // Обчислюємо tag для бекенда (бекенд не очікує 'all')
+  
   const tag = currentTag && currentTag !== "all" ? currentTag : undefined;
 
   useEffect(() => {
@@ -49,8 +49,8 @@ export default function NotesClient({
 
     if (p !== page) setPage(p);
     if (s !== search) setSearch(s);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [params, initialPage, initialSearch]);
+   
+  }, [paramsStr, initialPage, initialSearch]); // ✅
 
   const queryKey = [
     "notes",
@@ -63,13 +63,19 @@ export default function NotesClient({
       queryFn: ({ signal }) =>
         fetchNotes({ page, perPage, search: debouncedSearch, tag }, signal),
       placeholderData: (prev) => prev,
-      // (якщо вимагають) refetchOnMount: false,
     });
 
-  const items = data?.notes ?? [];
-  const pages = Math.max(1, data?.totalPages ?? 1);
+  const { items, pages } = useMemo(() => {
+    const items = (data as any)?.notes ?? (data as any)?.items ?? [];
+    const totalPages =
+      (data as any)?.totalPages ??
+      ((data as any)?.total
+        ? Math.ceil(Number((data as any).total) / perPage)
+        : 1);
+    return { items, pages: Math.max(1, Number(totalPages) || 1) };
+  }, [data, perPage]);
 
-  // Базовий шлях для побудови URL (щоб sidebar не перерендерився)
+
   const basePath =
     currentTag && currentTag !== "all"
       ? `/notes/filter/${encodeURIComponent(currentTag)}`
@@ -149,6 +155,7 @@ export default function NotesClient({
             page={page}
             search={debouncedSearch}
             perPage={perPage}
+            tagKey={tag ?? "all"} 
           />
           {pages > 1 && (
             <Pagination

@@ -1,8 +1,8 @@
 import css from "./layout.module.css";
 
 export default function FilterLayout({
-  children, // дефолтний слот (контент нотаток)
-  sidebar, // паралельний слот @sidebar
+  children,
+  sidebar,
 }: {
   children: React.ReactNode;
   sidebar: React.ReactNode;
