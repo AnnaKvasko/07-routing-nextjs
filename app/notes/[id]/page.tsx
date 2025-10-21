@@ -5,7 +5,7 @@ import {
 } from "@tanstack/react-query";
 import { notFound } from "next/navigation";
 import { fetchNoteById } from "@/lib/api";
-import NoteDetailsClient from "@/components/NoteDetails/NoteDetailsClient";
+import NoteDetailsClient from "@/app/notes/[id]/NoteDetails.client";
 import type { Note } from "@/types/note";
 import { isAxiosError } from "axios";
 

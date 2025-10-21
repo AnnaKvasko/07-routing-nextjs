@@ -5,7 +5,7 @@ import {
 } from "@tanstack/react-query";
 import { fetchNotes } from "@/lib/api";
 import type { NotesListResponse } from "@/lib/types";
-import NotesClient from "@/app/notes/filter/[...slug]/NotesClient";
+import NotesClient from "@/app/notes/filter/[...slug]/Notes.client";
 
 type PageProps = {
   searchParams: Promise<{ page?: string; search?: string }>;

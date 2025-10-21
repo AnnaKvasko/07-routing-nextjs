@@ -6,7 +6,7 @@ import {
 import { fetchNotes } from "@/lib/api";
 import type { NotesListResponse } from "@/lib/types";
 import { TAGS, type NoteTag } from "@/types/note";
-import NotesClient from "./NotesClient";
+import NotesClient from "./Notes.client";
 
 const isNoteTag = (v: string): v is NoteTag => TAGS.includes(v as NoteTag);
 
