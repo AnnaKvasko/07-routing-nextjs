@@ -5,15 +5,13 @@ import {
 } from "@tanstack/react-query";
 import { fetchNotes } from "@/lib/api";
 import type { NotesListResponse } from "@/lib/types";
-import NotesClient from "@/app/notes/filter/[[...slug]]/NotesClient";
+import NotesClient from "@/app/notes/filter/[...slug]/NotesClient";
 
 type PageProps = {
- 
   searchParams: Promise<{ page?: string; search?: string }>;
 };
 
 export default async function NotesPage({ searchParams }: PageProps) {
-  
   const sp = await searchParams;
 
   const pageNum = Number(sp.page);
@@ -26,14 +24,11 @@ export default async function NotesPage({ searchParams }: PageProps) {
 
   try {
     await qc.prefetchQuery<NotesListResponse>({
-      
       queryKey: ["notes", { page, search, perPage, tag: "all" }],
       queryFn: () => fetchNotes({ page, perPage, search: search || undefined }),
       staleTime: 30_000,
     });
-  } catch {
-  
-  }
+  } catch {}
 
   return (
     <HydrationBoundary state={dehydrate(qc)}>
