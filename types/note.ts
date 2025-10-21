@@ -1,10 +1,11 @@
 export const TAGS = [
-  'Todo',
-  'Work',
-  'Personal',
-  'Meeting',
-  'Shopping',
+  "Todo",
+  "Work",
+  "Personal",
+  "Meeting",
+  "Shopping",
 ] as const;
+export const ALL_TAGS = ["All", ...TAGS] as const;
 export type NoteTag = (typeof TAGS)[number];
 
 export interface Note {

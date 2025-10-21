@@ -11,7 +11,7 @@ import {
 import * as Yup from "yup";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { createNote, type CreateNoteParams } from "@/lib/api";
-import type { Note, NoteTag } from "@/types/note";
+import type { Note } from "@/types/note";
 import { TAGS } from "@/types/note";
 import css from "./NoteForm.module.css";
 
@@ -38,10 +38,23 @@ export default function NoteForm({ onCancel }: { onCancel: () => void }) {
   >({
     mutationFn: (body) => createNote(body),
     onSuccess: (_data, variables) => {
+      // Інвалідовуємо все, що починається з "notes"
       qc.invalidateQueries({ queryKey: ["notes"] });
-      if (variables.tag) {
-        qc.invalidateQueries({ queryKey: ["notes", { tag: variables.tag }] });
-      }
+
+      // Точково: тільки списки з tag === 'all' або конкретним створеним тегом
+      qc.invalidateQueries({
+        predicate: (q) => {
+          if (!Array.isArray(q.queryKey)) return false;
+          if (q.queryKey[0] !== "notes") return false;
+
+          const params = q.queryKey[1] as
+            | { page?: number; search?: string; perPage?: number; tag?: string }
+            | undefined;
+
+          const tagKey = params?.tag ?? "all";
+          return tagKey === "all" || tagKey === variables.tag;
+        },
+      });
     },
   });
 

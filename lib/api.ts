@@ -5,6 +5,7 @@ import type { NotesListResponse } from "@/lib/types";
 const API_BASE =
   process.env.NEXT_PUBLIC_NOTEHUB_API ??
   "https://notehub-public.goit.study/api";
+
 const TOKEN = process.env.NEXT_PUBLIC_NOTEHUB_TOKEN;
 
 export const api: AxiosInstance = axios.create({
@@ -25,7 +26,7 @@ export interface FetchNotesParams {
   page: number;
   perPage: number;
   search?: string;
-  tag?: NoteTag; 
+  tag?: NoteTag;
 }
 
 export interface CreateNoteParams {
@@ -38,19 +39,17 @@ export interface DeleteNoteParams {
   id: string;
 }
 
-
 export async function fetchNotes(
   { page, perPage, search, tag }: FetchNotesParams,
   signal?: AbortSignal
 ): Promise<NotesListResponse> {
   const params: Record<string, string | number> = { page, perPage };
-  if (search?.trim()) params.search = search.trim();
-  if (tag) params.tag = tag; 
 
-  const res: AxiosResponse<NotesListResponse> = await api.get("/notes", {
-    params,
-    signal,
-  });
+  if (search?.trim()) params.search = search.trim();
+  if (tag) params.tag = tag;
+
+  const res: AxiosResponse<NotesListResponse> =
+    await api.get<NotesListResponse>("/notes", { params, signal });
   return res.data;
 }
 
@@ -58,7 +57,9 @@ export async function fetchNoteById(
   id: string,
   signal?: AbortSignal
 ): Promise<Note> {
-  const res: AxiosResponse<Note> = await api.get(`/notes/${id}`, { signal });
+  const res: AxiosResponse<Note> = await api.get<Note>(`/notes/${id}`, {
+    signal,
+  });
   return res.data;
 }
 
@@ -66,14 +67,15 @@ export async function createNote(
   body: CreateNoteParams,
   signal?: AbortSignal
 ): Promise<Note> {
-  const res: AxiosResponse<Note> = await api.post("/notes", body, { signal });
+  const res: AxiosResponse<Note> = await api.post<Note>("/notes", body, {
+    signal,
+  });
   return res.data;
 }
 
 export async function deleteNote(
   { id }: DeleteNoteParams,
   signal?: AbortSignal
-): Promise<Note> {
-  const res: AxiosResponse<Note> = await api.delete(`/notes/${id}`, { signal });
-  return res.data;
+): Promise<void> {
+  await api.delete(`/notes/${id}`, { signal });
 }

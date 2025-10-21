@@ -1,29 +1,22 @@
 "use client";
 
 import Link from "next/link";
-import { TAGS } from "@/types/note";
+import { ALL_TAGS } from "@/types/note";
 import css from "./SidebarNotes.module.css";
 
 export default function SidebarNotes() {
   return (
     <ul className={css.menuList}>
-      <li className={css.menuItem}>
-        <Link href={`/notes/filter/all`} className={css.menuLink}>
-          All notes
-        </Link>
-      </li>
-
-      {TAGS.map((tag) => (
+      {ALL_TAGS.map((tag) => (
         <li key={tag} className={css.menuItem}>
           <Link
-            href={`/notes/filter/${encodeURIComponent(tag)}`}
+            href={`/notes/filter/${encodeURIComponent(tag.toLowerCase())}`}
             className={css.menuLink}
           >
-            {tag}
+            {tag === "All" ? "All notes" : tag}
           </Link>
         </li>
       ))}
     </ul>
   );
 }
-

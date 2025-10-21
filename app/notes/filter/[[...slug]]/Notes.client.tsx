@@ -6,7 +6,7 @@ import { useDebounce } from "use-debounce";
 import { useRouter, useSearchParams } from "next/navigation";
 import { fetchNotes } from "@/lib/api";
 import type { NotesListResponse } from "@/lib/types";
-import type { NoteTag } from "@/types/note";
+import type { Note, NoteTag } from "@/types/note";
 import NoteList from "@/components/NoteList/NoteList";
 import SearchBox from "@/components/SearchBox/SearchBox";
 import QueryError from "@/components/QueryError/QueryError";
@@ -22,6 +22,11 @@ type Props = {
   currentTag?: NoteTag | "all";
 };
 
+type NotesListResponseAlt = {
+  items: Note[];
+  total: number;
+};
+
 export default function NotesClient({
   initialPage,
   initialSearch,
@@ -30,14 +35,13 @@ export default function NotesClient({
 }: Props) {
   const router = useRouter();
   const params = useSearchParams();
-  const paramsStr = params.toString(); 
+  const paramsStr = params.toString();
 
-  const [page, setPage] = useState(initialPage);
-  const [search, setSearch] = useState(initialSearch);
+  const [page, setPage] = useState<number>(initialPage);
+  const [search, setSearch] = useState<string>(initialSearch);
   const [debouncedSearch] = useDebounce(search, 400);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  
   const tag = currentTag && currentTag !== "all" ? currentTag : undefined;
 
   useEffect(() => {
@@ -49,32 +53,43 @@ export default function NotesClient({
 
     if (p !== page) setPage(p);
     if (s !== search) setSearch(s);
-   
-  }, [paramsStr, initialPage, initialSearch]); // ✅
+  }, [paramsStr, initialPage, initialSearch, page, search]);
 
   const queryKey = [
     "notes",
     { page, search: debouncedSearch, perPage, tag: tag ?? "all" },
   ] as const;
 
-  const { data, isLoading, isError, error, isFetching } =
-    useQuery<NotesListResponse>({
-      queryKey,
-      queryFn: ({ signal }) =>
-        fetchNotes({ page, perPage, search: debouncedSearch, tag }, signal),
-      placeholderData: (prev) => prev,
-    });
+  const { data, isLoading, isError, error, isFetching } = useQuery<
+    NotesListResponse | NotesListResponseAlt
+  >({
+    queryKey,
+    queryFn: ({ signal }) =>
+      fetchNotes(
+        { page, perPage, search: debouncedSearch || undefined, tag },
+        signal
+      ),
+    placeholderData: (prev) => prev,
+    staleTime: 30_000,
+  });
 
   const { items, pages } = useMemo(() => {
-    const items = (data as any)?.notes ?? (data as any)?.items ?? [];
-    const totalPages =
-      (data as any)?.totalPages ??
-      ((data as any)?.total
-        ? Math.ceil(Number((data as any).total) / perPage)
-        : 1);
-    return { items, pages: Math.max(1, Number(totalPages) || 1) };
-  }, [data, perPage]);
+    let list: Note[] = [];
+    let totalPages = 1;
 
+    if (data) {
+      if ("notes" in data) {
+        list = data.notes;
+        totalPages = Math.max(1, Number(data.totalPages ?? 1));
+      } else if ("items" in data) {
+        list = data.items as Note[];
+        const total = Number((data as NotesListResponseAlt).total ?? 0);
+        totalPages = Math.max(1, Math.ceil(total / perPage));
+      }
+    }
+
+    return { items: list, pages: totalPages };
+  }, [data, perPage]);
 
   const basePath =
     currentTag && currentTag !== "all"
@@ -155,7 +170,7 @@ export default function NotesClient({
             page={page}
             search={debouncedSearch}
             perPage={perPage}
-            tagKey={tag ?? "all"} 
+            tagKey={tag ?? "all"}
           />
           {pages > 1 && (
             <Pagination
