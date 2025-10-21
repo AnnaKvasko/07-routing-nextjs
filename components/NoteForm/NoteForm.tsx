@@ -70,7 +70,7 @@ export default function NoteForm({ onCancel }: { onCancel: () => void }) {
   const initialValues: FormValues = {
     title: "",
     content: "",
-    tag: TAGS[0], // ✅ TS знає, що TAGS[0] — NoteTag
+    tag: TAGS[0],
   };
 
   const handleSubmit = (
