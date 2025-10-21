@@ -1,19 +1,26 @@
-import Link from 'next/link';
-import css from './Header.module.css';
+"use client";
+
+import Link from "next/link";
+import TagsMenu from "@/components/TagsMenu/TagsMenu";
+import css from "./Header.module.css";
 
 export default function Header() {
   return (
     <header className={css.header}>
-      <Link href="/" aria-label="Home">
+      <Link href="/" className={css.headerLink}>
         NoteHub
       </Link>
-      <nav aria-label="Main Navigation">
+
+      <nav>
         <ul className={css.navigation}>
-          <li>
-            <Link href="/">Home</Link>
+          <li className={css.navigationItem}>
+            <Link href="/notes" className={css.navigationLink}>
+              All Notes
+            </Link>
           </li>
-          <li>
-            <Link href="/notes">Notes</Link>
+
+          <li className={css.navigationItem}>
+            <TagsMenu />
           </li>
         </ul>
       </nav>

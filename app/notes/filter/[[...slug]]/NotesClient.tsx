@@ -53,12 +53,24 @@ export default function NotesClient({
 
     if (p !== page) setPage(p);
     if (s !== search) setSearch(s);
-  }, [paramsStr, initialPage, initialSearch, page, search]);
+  }, [paramsStr, initialPage, initialSearch]);
 
-  const queryKey = [
-    "notes",
-    { page, search: debouncedSearch, perPage, tag: tag ?? "all" },
-  ] as const;
+  const basePath = useMemo(() => {
+    if (currentTag && currentTag !== "all") {
+      return `/notes/filter/${encodeURIComponent(currentTag)}`;
+    }
+    if (currentTag === "all") return `/notes/filter/all`;
+    return `/notes`;
+  }, [currentTag]);
+
+  const queryKey = useMemo(
+    () =>
+      [
+        "notes",
+        { page, search: debouncedSearch, perPage, tag: tag ?? "all" },
+      ] as const,
+    [page, debouncedSearch, perPage, tag]
+  );
 
   const { data, isLoading, isError, error, isFetching } = useQuery<
     NotesListResponse | NotesListResponseAlt
@@ -91,13 +103,6 @@ export default function NotesClient({
     return { items: list, pages: totalPages };
   }, [data, perPage]);
 
-  const basePath =
-    currentTag && currentTag !== "all"
-      ? `/notes/filter/${encodeURIComponent(currentTag)}`
-      : currentTag === "all"
-        ? `/notes/filter/all`
-        : `/notes`;
-
   useEffect(() => {
     if (page > pages && pages > 0) {
       const sp = new URLSearchParams(params);
@@ -117,6 +122,8 @@ export default function NotesClient({
   };
 
   const onSearchChange = (val: string) => {
+    setSearch(val);
+
     const sp = new URLSearchParams(params);
     if (val) sp.set("search", val);
     else sp.delete("search");
