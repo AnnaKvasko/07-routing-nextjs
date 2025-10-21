@@ -22,14 +22,15 @@ type Props = {
   currentTag?: NoteTag | "all";
 };
 
+// альтернативний формат відповіді, якщо бек інколи повертає items/total
 type NotesListResponseAlt = {
   items: Note[];
   total: number;
 };
 
-function isAltResponse(
-  data: NotesListResponse | NotesListResponseAlt
-): data is NotesListResponseAlt {
+type ApiResponse = NotesListResponse | NotesListResponseAlt;
+
+function isAltResponse(data: ApiResponse): data is NotesListResponseAlt {
   return (data as NotesListResponseAlt).items !== undefined;
 }
 
@@ -53,6 +54,7 @@ export default function NotesClient({
     [currentTag]
   );
 
+  // синхронізація локального стану з URL (враховано всі залежності)
   useEffect(() => {
     const pRaw = params.get("page");
     const pNum = Number(pRaw);
@@ -81,18 +83,18 @@ export default function NotesClient({
     [page, debouncedSearch, perPage, tag]
   );
 
-  const { data, isLoading, isError, error, isFetching } = useQuery<
-    NotesListResponse | NotesListResponseAlt
-  >({
-    queryKey,
-    queryFn: ({ signal }) =>
-      fetchNotes(
-        { page, perPage, search: debouncedSearch || undefined, tag },
-        signal
-      ),
-    placeholderData: (prev) => prev,
-    staleTime: 30_000,
-  });
+  const { data, isLoading, isError, error, isFetching } = useQuery<ApiResponse>(
+    {
+      queryKey,
+      queryFn: ({ signal }) =>
+        fetchNotes(
+          { page, perPage, search: debouncedSearch || undefined, tag },
+          signal
+        ),
+      placeholderData: (prev) => prev,
+      staleTime: 30_000,
+    }
+  );
 
   const { items, pages } = useMemo(() => {
     if (!data) return { items: [] as Note[], pages: 1 };
@@ -107,6 +109,7 @@ export default function NotesClient({
     return { items: data.notes, pages: totalPages };
   }, [data, perPage]);
 
+  // якщо поточна сторінка поза межами — повертаємося на 1
   useEffect(() => {
     if (page > pages && pages > 0) {
       const sp = new URLSearchParams(params);
@@ -126,7 +129,7 @@ export default function NotesClient({
   };
 
   const onSearchChange = (val: string) => {
-    setSearch(val);
+    setSearch(val); // миттєво оновлюємо інпут
 
     const sp = new URLSearchParams(params);
     if (val) sp.set("search", val);
