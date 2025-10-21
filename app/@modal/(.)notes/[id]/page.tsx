@@ -5,7 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import { fetchNoteById } from "@/lib/api";
 import type { Note } from "@/types/note";
 import Modal from "@/components/Modal/Modal";
-import NoteDetailsClient from "@/components/NoteDetails/NoteDetailsClient";
+import NoteDetailsClient from "@/app/notes/[id]/NoteDetails.client";
 
 type PageProps = { params: { id: string } };
 
