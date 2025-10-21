@@ -27,6 +27,12 @@ type NotesListResponseAlt = {
   total: number;
 };
 
+function isAltResponse(
+  data: NotesListResponse | NotesListResponseAlt
+): data is NotesListResponseAlt {
+  return (data as NotesListResponseAlt).items !== undefined;
+}
+
 export default function NotesClient({
   initialPage,
   initialSearch,
@@ -42,7 +48,10 @@ export default function NotesClient({
   const [debouncedSearch] = useDebounce(search, 400);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const tag = currentTag && currentTag !== "all" ? currentTag : undefined;
+  const tag = useMemo<NoteTag | undefined>(
+    () => (currentTag && currentTag !== "all" ? currentTag : undefined),
+    [currentTag]
+  );
 
   useEffect(() => {
     const pRaw = params.get("page");
@@ -53,7 +62,7 @@ export default function NotesClient({
 
     if (p !== page) setPage(p);
     if (s !== search) setSearch(s);
-  }, [paramsStr, initialPage, initialSearch]);
+  }, [params, paramsStr, initialPage, initialSearch, page, search]);
 
   const basePath = useMemo(() => {
     if (currentTag && currentTag !== "all") {
@@ -86,21 +95,16 @@ export default function NotesClient({
   });
 
   const { items, pages } = useMemo(() => {
-    let list: Note[] = [];
-    let totalPages = 1;
+    if (!data) return { items: [] as Note[], pages: 1 };
 
-    if (data) {
-      if ("notes" in data) {
-        list = data.notes;
-        totalPages = Math.max(1, Number(data.totalPages ?? 1));
-      } else if ("items" in data) {
-        list = data.items as Note[];
-        const total = Number((data as NotesListResponseAlt).total ?? 0);
-        totalPages = Math.max(1, Math.ceil(total / perPage));
-      }
+    if (isAltResponse(data)) {
+      const total = Number(data.total ?? 0);
+      const totalPages = Math.max(1, Math.ceil(total / perPage));
+      return { items: data.items, pages: totalPages };
     }
 
-    return { items: list, pages: totalPages };
+    const totalPages = Math.max(1, Number(data.totalPages ?? 1));
+    return { items: data.notes, pages: totalPages };
   }, [data, perPage]);
 
   useEffect(() => {
