@@ -25,6 +25,7 @@ export default async function NoteDetailsPage({ params }: PageProps) {
     });
   } catch (e) {
     if (isAxiosError(e) && e.response?.status === 404) notFound();
+    throw e;
   }
 
   return (
