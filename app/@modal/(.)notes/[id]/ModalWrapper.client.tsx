@@ -4,21 +4,35 @@ import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
 export default function ModalWrapper({
+  open = true,
+  onClose,
+  labelledById,
   children,
 }: {
+  open?: boolean;
+  onClose?: () => void;
+  labelledById?: string;
   children: React.ReactNode;
 }) {
   const router = useRouter();
 
-  const handleClose = () => router.back();
+  const handleClose = () => {
+    if (onClose) onClose();
+    else router.back();
+  };
 
+  
   useEffect(() => {
+    if (!open) return;
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") handleClose();
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [router]);
+  }, [open, router]);
+
+ 
+  if (!open) return null;
 
   return (
     <div
@@ -34,6 +48,7 @@ export default function ModalWrapper({
       }}
       aria-modal="true"
       role="dialog"
+      aria-labelledby={labelledById}
     >
       <div
         onClick={(e) => e.stopPropagation()}

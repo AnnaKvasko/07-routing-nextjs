@@ -1,13 +1,14 @@
 "use client";
 
 import { useRouter, useParams } from "next/navigation";
-import Modal from "@/components/Modal/Modal";
+import ModalWrapper from "./ModalWrapper.client";
 import NoteDetailsClient from "@/app/notes/[id]/NoteDetails.client";
 
 export default function NotePreview() {
   const router = useRouter();
   const { id } = useParams<{ id: string }>();
 
+  
   const handleClose = () => {
     if (typeof window !== "undefined" && window.history.length > 1)
       router.back();
@@ -17,8 +18,8 @@ export default function NotePreview() {
   if (!id) return null;
 
   return (
-    <Modal open onClose={handleClose} labelledById="note-preview-title">
+    <ModalWrapper open onClose={handleClose} labelledById="note-preview-title">
       <NoteDetailsClient id={id} />
-    </Modal>
+    </ModalWrapper>
   );
 }

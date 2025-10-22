@@ -8,7 +8,7 @@ import { fetchNoteById } from "@/lib/api";
 import NoteDetailsClient from "@/app/notes/[id]/NoteDetails.client";
 import { isAxiosError } from "axios";
 import type { Note } from "@/types/note";
-import ModalWrapper from "@/app/@modal/ModalWrapper.client";
+import ModalWrapper from "@/app/@modal/(.)notes/[id]/ModalWrapper.client";
 
 type PageProps = { params: Promise<{ id: string }> };
 

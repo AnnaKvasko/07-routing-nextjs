@@ -73,7 +73,6 @@ export async function createNote(
   return res.data;
 }
 
-
 export async function deleteNote(
   { id }: DeleteNoteParams,
   signal?: AbortSignal

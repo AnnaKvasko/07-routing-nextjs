@@ -1,7 +1,7 @@
 .container {
   display: flex;
   flex-direction: row;
-  height: 100vh;
+  min-height: calc(100vh - 80px);
 }
 
 .sidebar {
@@ -11,10 +11,13 @@
   padding: 16px;
   display: flex;
   flex-direction: column;
-  height: 100vh;
   border-right: 1px solid #ddd;
 }
 
 .notesWrapper {
-  width: 100%;
+  flex: 1;
+  padding: 24px;
+  overflow-y: visible;
+
+  background-color: #f8f9fa;
 }
