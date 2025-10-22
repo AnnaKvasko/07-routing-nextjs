@@ -73,9 +73,13 @@ export async function createNote(
   return res.data;
 }
 
+
 export async function deleteNote(
   { id }: DeleteNoteParams,
   signal?: AbortSignal
-): Promise<void> {
-  await api.delete(`/notes/${id}`, { signal });
+): Promise<Note> {
+  const res: AxiosResponse<Note> = await api.delete<Note>(`/notes/${id}`, {
+    signal,
+  });
+  return res.data;
 }

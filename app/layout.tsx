@@ -18,9 +18,6 @@ export default function RootLayout({
       <body>
         <TanStackProvider>
           <Header />
-
-          <div id="modal-root" />
-
           <main id="main" role="main">
             {children}
             {modal}

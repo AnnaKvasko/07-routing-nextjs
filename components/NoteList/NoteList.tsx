@@ -16,6 +16,8 @@ export interface NoteListProps {
   tagKey?: string;
 }
 
+type Ctx = { prevData?: NotesListResponse };
+
 export default function NoteList({
   notes,
   page,
@@ -28,8 +30,8 @@ export default function NoteList({
 
   const listKey = ["notes", { page, search, perPage, tag: tagKey }] as const;
 
-  const { mutate } = useMutation({
-    mutationFn: (id: string) => deleteNote({ id }),
+  const { mutate } = useMutation<Note, Error, string, Ctx>({
+    mutationFn: (id) => deleteNote({ id }),
     onMutate: async (id) => {
       setDeletingId(id);
       await qc.cancelQueries({ queryKey: listKey });
@@ -55,11 +57,12 @@ export default function NoteList({
       return { prevData };
     },
     onError: (_err, _id, ctx) => {
-      if (ctx?.prevData)
+      if (ctx?.prevData) {
         qc.setQueryData<NotesListResponse>(listKey, ctx.prevData);
+      }
       setDeletingId(null);
     },
-    onSuccess: () => {
+    onSuccess: (_deletedNote) => {
       qc.invalidateQueries({ queryKey: ["notes"] });
     },
     onSettled: () => setDeletingId(null),
