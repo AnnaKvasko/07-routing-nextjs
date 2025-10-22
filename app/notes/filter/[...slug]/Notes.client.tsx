@@ -122,14 +122,30 @@ export default function NotesClient({
   return (
     <div className={css.app} aria-busy={isFetching && !isLoading}>
       <header className={css.toolbar}>
-        <SearchBox value={search} onChange={onSearchChange} />
-        <button
-          type="button"
-          className={css.button}
-          onClick={() => setIsModalOpen(true)}
-        >
-          Create note +
-        </button>
+        <div className={css.leftBlock}>
+          <SearchBox value={search} onChange={onSearchChange} />
+        </div>
+
+        {pages > 1 && (
+          <div className={css.centerBlock}>
+            <Pagination
+              key={`top-${pages}-${tag ?? "all"}-${debouncedSearch}`}
+              pageCount={pages}
+              currentPage={page}
+              onPageChange={onPageChange}
+            />
+          </div>
+        )}
+
+        <div className={css.rightBlock}>
+          <button
+            type="button"
+            className={css.button}
+            onClick={() => setIsModalOpen(true)}
+          >
+            Create note +
+          </button>
+        </div>
       </header>
 
       {isError && <QueryError error={error} />}
@@ -150,7 +166,7 @@ export default function NotesClient({
 
       {pages > 1 && (
         <Pagination
-          key={`${pages}-${tag ?? "all"}-${debouncedSearch}`}
+          key={`bottom-${pages}-${tag ?? "all"}-${debouncedSearch}`}
           pageCount={pages}
           currentPage={page}
           onPageChange={onPageChange}
