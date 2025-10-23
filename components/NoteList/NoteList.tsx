@@ -167,7 +167,6 @@ export default function NoteList({
       setDeletingId(null);
     },
     onSuccess: () => {
-      // прибрали невикористаний параметр _deletedNote ✅
       qc.invalidateQueries({
         predicate: (q) =>
           Array.isArray(q.queryKey) && q.queryKey[0] === "notes",

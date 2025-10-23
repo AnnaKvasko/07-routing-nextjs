@@ -413,17 +413,14 @@ export default function NotesClient({
   const router = useRouter();
   const params = useSearchParams();
 
-  // Читаємо параметри з URL
   const qpPage = params.get("page") ?? "";
   const qpSearch = params.get("search") ?? "";
 
-  // Локальний стан
   const [page, setPage] = useState<number>(initialPage);
   const [search, setSearch] = useState<string>(initialSearch);
   const [debouncedSearch] = useDebounce<string>(search, 400);
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
 
-  // Тег і базовий шлях
   const tag = useMemo<NoteTag | undefined>(
     () => (currentTag && currentTag !== "all" ? currentTag : undefined),
     [currentTag]
@@ -437,7 +434,6 @@ export default function NotesClient({
     return `/notes`;
   }, [currentTag]);
 
-  // URL -> state: без звернення до page/search, тож лінтер не вимагає їх у deps
   const lastSyncRef = useRef<{ p: number; s: string } | null>(null);
   useEffect(() => {
     const pNum = Number(qpPage);
@@ -450,9 +446,8 @@ export default function NotesClient({
       setSearch((prev) => (prev !== nextSearch ? nextSearch : prev));
       lastSyncRef.current = { p: nextPage, s: nextSearch };
     }
-  }, [qpPage, qpSearch, initialPage, initialSearch]); // ✅ немає вимоги page/search
+  }, [qpPage, qpSearch, initialPage, initialSearch]);
 
-  // Ключ запиту
   const queryKey = useMemo(
     () =>
       [
@@ -462,7 +457,6 @@ export default function NotesClient({
     [page, debouncedSearch, perPage, tag]
   );
 
-  // Завантаження
   const { data, isLoading, isError, error, isFetching } = useQuery<
     NotesListResponse,
     Error
@@ -479,32 +473,25 @@ export default function NotesClient({
 
   const items = data?.notes ?? [];
 
-  // Підрахунок сторінок — без any
   const pages = useMemo(() => {
     if (typeof data?.totalPages === "number") {
       return Math.max(1, data.totalPages);
     }
-    // Якщо у твоєму типі є total — можна додати:
-    // if (typeof data?.total === "number") {
-    //   return Math.max(1, Math.ceil(data.total / perPage));
-    // }
+
     if (items.length === perPage) {
       return Math.max(2, page + 1);
     }
     return 1;
   }, [data, perPage, items.length, page]);
 
-  // На першу сторінку при зміні пошуку/тегу
   useEffect(() => {
     setPage((prev) => (prev !== 1 ? 1 : prev));
   }, [debouncedSearch, tag]);
 
-  // Звузити, якщо page > pages
   useEffect(() => {
     if (page > pages) setPage(pages);
   }, [pages, page]);
 
-  // state -> URL (guard: пушимо тільки якщо реально змінився)
   useEffect(() => {
     const sp = new URLSearchParams();
     if (page !== 1) sp.set("page", String(page));
@@ -527,7 +514,6 @@ export default function NotesClient({
     }
   }, [page, debouncedSearch, basePath, router, params]);
 
-  // Колбеки
   const onPageChange = (nextPage: number): void => setPage(nextPage);
   const onSearchChange = (value: string): void => setSearch(value);
 
