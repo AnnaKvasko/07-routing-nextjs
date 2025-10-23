@@ -94,6 +94,7 @@ export default function NotesClient({
     if (typeof anyData?.total === "number") {
       return Math.max(1, Math.ceil(anyData.total / perPage));
     }
+
     if (items.length === perPage) {
       return Math.max(2, page + 1);
     }

@@ -62,9 +62,9 @@ export default function NoteList({
       }
       setDeletingId(null);
     },
-    onSuccess: (_deletedNote) => {
-      qc.invalidateQueries({ queryKey: ["notes"] });
-    },
+    // onSuccess: (_deletedNote) => {
+    //   qc.invalidateQueries({ queryKey: ["notes"] });
+    // },
     onSettled: () => setDeletingId(null),
   });
 
@@ -100,4 +100,3 @@ export default function NoteList({
     </ul>
   );
 }
-
