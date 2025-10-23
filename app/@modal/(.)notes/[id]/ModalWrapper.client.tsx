@@ -21,7 +21,6 @@ export default function ModalWrapper({
     else router.back();
   };
 
-  
   useEffect(() => {
     if (!open) return;
     const onKeyDown = (e: KeyboardEvent) => {
@@ -31,7 +30,6 @@ export default function ModalWrapper({
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [open, router]);
 
- 
   if (!open) return null;
 
   return (

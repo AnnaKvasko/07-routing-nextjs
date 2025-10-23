@@ -15,5 +15,5 @@ export interface Note {
   tag: NoteTag;
   createdAt: string;
   updatedAt: string;
+  total?: number;
 }
-
