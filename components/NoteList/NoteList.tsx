@@ -141,6 +141,7 @@ export default function NoteList({
       const prevData = qc.getQueryData<NotesListResponse>(listKey);
       if (prevData) {
         const nextNotes = (prevData.notes ?? []).filter((n) => n.id !== id);
+
         const totalPages =
           typeof prevData.totalPages === "number"
             ? prevData.totalPages
@@ -166,7 +167,7 @@ export default function NoteList({
       setDeletingId(null);
     },
     onSuccess: () => {
-      // без невикористаних параметрів (_deletedNote) ✅
+      // прибрали невикористаний параметр _deletedNote ✅
       qc.invalidateQueries({
         predicate: (q) =>
           Array.isArray(q.queryKey) && q.queryKey[0] === "notes",
