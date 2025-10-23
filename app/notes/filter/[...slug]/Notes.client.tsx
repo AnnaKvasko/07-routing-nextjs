@@ -183,7 +183,7 @@
 // }
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useDebounce } from "use-debounce";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -214,17 +214,17 @@ export default function NotesClient({
   const router = useRouter();
   const params = useSearchParams();
 
-  // 1) Джерело правди з URL (не .toString())
+  // 1) Читаємо поточні параметри з URL як "джерело правди"
   const qpPage = params.get("page") ?? "";
   const qpSearch = params.get("search") ?? "";
 
-  // 2) Локальний state
+  // 2) Локальний стан UI
   const [page, setPage] = useState<number>(initialPage);
   const [search, setSearch] = useState<string>(initialSearch);
   const [debouncedSearch] = useDebounce<string>(search, 400);
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
 
-  // 3) Поточний тег
+  // 3) Тег
   const tag = useMemo<NoteTag | undefined>(
     () => (currentTag && currentTag !== "all" ? currentTag : undefined),
     [currentTag]
@@ -239,16 +239,22 @@ export default function NotesClient({
     return `/notes`;
   }, [currentTag]);
 
-  // 5) Синхронізація state ⇐ URL (без залежності від page/search — уникаємо гойдалки)
+  // 5) Синхронізація state ⇐ URL БЕЗ читання page/search (лінтер не просить їх у deps)
+  //    Використовуємо функціональні setState, щоб не залежати від поточного значення.
+  const lastSyncRef = useRef<{ p: number; s: string } | null>(null);
   useEffect(() => {
     const pNum = Number(qpPage);
     const nextPage = Number.isFinite(pNum) && pNum > 0 ? pNum : initialPage;
     const nextSearch = qpSearch || initialSearch;
 
-    if (nextPage !== page) setPage(nextPage);
-    if (nextSearch !== search) setSearch(nextSearch);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [qpPage, qpSearch, initialPage, initialSearch]); // без page/search у deps
+    // Пропускаємо, якщо URL не змінився відносно останньої синхронізації
+    const last = lastSyncRef.current;
+    if (!last || last.p !== nextPage || last.s !== nextSearch) {
+      setPage((prev) => (prev !== nextPage ? nextPage : prev));
+      setSearch((prev) => (prev !== nextSearch ? nextSearch : prev));
+      lastSyncRef.current = { p: nextPage, s: nextSearch };
+    }
+  }, [qpPage, qpSearch, initialPage, initialSearch]);
 
   // 6) Ключ запиту
   const queryKey = useMemo(
@@ -260,7 +266,7 @@ export default function NotesClient({
     [page, debouncedSearch, perPage, tag]
   );
 
-  // 7) Фетч
+  // 7) Завантаження
   const { data, isLoading, isError, error, isFetching } = useQuery<
     NotesListResponse,
     Error
@@ -277,32 +283,32 @@ export default function NotesClient({
 
   const items = data?.notes ?? [];
 
-  // 8) Обчислення кількості сторінок — без any
+  // 8) Обчислення сторінок (без any)
   const pages = useMemo(() => {
     if (data && typeof data.totalPages === "number") {
       return Math.max(1, data.totalPages);
     }
-    // якщо є total — розкоментуй наступний блок і додай поле в тип:
+    // Якщо бек колись поверне total — можна додати:
     // if (data && typeof data.total === "number") {
     //   return Math.max(1, Math.ceil(data.total / perPage));
     // }
-    if ((items.length ?? 0) === perPage) {
+    if (items.length === perPage) {
       return Math.max(2, page + 1);
     }
     return 1;
   }, [data, perPage, items.length, page]);
 
-  // 9) При зміні пошуку/тегу — на першу сторінку
+  // 9) На першу сторінку при зміні пошуку/тегу
   useEffect(() => {
     setPage((prev) => (prev !== 1 ? 1 : prev));
   }, [debouncedSearch, tag]);
 
-  // 10) Якщо поточна сторінка > pages — звузити
+  // 10) Звуження, якщо поточна сторінка > pages
   useEffect(() => {
     if (page > pages) setPage(pages);
   }, [pages, page]);
 
-  // 11) Пушимо URL лише якщо він відрізняється від поточного
+  // 11) Пушимо URL лише якщо він відрізняється (guard від "гойдалки")
   useEffect(() => {
     const sp = new URLSearchParams();
     if (page !== 1) sp.set("page", String(page));
